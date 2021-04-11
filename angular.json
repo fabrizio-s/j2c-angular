@@ -1,5 +1,8 @@
 {
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "cli": {
+    "defaultCollection": "@ngxs/schematics"
+  },
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
@@ -33,7 +36,10 @@
             "styles": [
               "src/styles.scss"
             ],
-            "scripts": []
+            "scripts": [],
+            "allowedCommonJsDependencies": [
+              "typescript-optional"
+            ]
           },
           "configurations": {
             "production": {
@@ -68,7 +74,8 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "j2c-angular:build"
+            "browserTarget": "j2c-angular:build",
+            "proxyConfig": "proxy.config.json"
           },
           "configurations": {
             "production": {
