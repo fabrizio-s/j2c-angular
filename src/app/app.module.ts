@@ -3,6 +3,13 @@ import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { HttpClientModule } from '@angular/common/http';
+import { NgxsModule } from '@ngxs/store';
+import { environment } from 'src/environments/environment';
+import { ApiModule } from './api/api.module';
+import { AuthModule } from './auth/auth.module';
+import { httpInterceptorProviders } from './interceptors/http-interceptor-providers';
 
 @NgModule({
   declarations: [
@@ -10,9 +17,18 @@ import { AppComponent } from './app.component';
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
+    BrowserAnimationsModule,
+    HttpClientModule,
+    AuthModule,
+    ApiModule.forRoot({ rootUrl: environment.J2C_BASE_URL }),
+    NgxsModule.forRoot([], { developmentMode: !environment.production })
   ],
-  providers: [],
-  bootstrap: [AppComponent]
+  providers: [
+    httpInterceptorProviders
+  ],
+  bootstrap: [
+    AppComponent
+  ]
 })
 export class AppModule { }
