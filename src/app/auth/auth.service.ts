@@ -24,7 +24,7 @@ export class AuthService {
     public login(body: AuthRequest): Observable<void> {
         return this.authenticationService.authenticate$Response({ body })
             .pipe(
-                tap(this.processTokenResponse),
+                tap(response => this.processTokenResponse(response)),
                 map(() => undefined as void)
             );
     }
@@ -60,10 +60,10 @@ export class AuthService {
         const duration = date.getTime() - Date.now() - tokenRefreshOffset;
         this.tokenExpirationTimer = setTimeout(
             () => {
-                this.authenticationService.refresh$Response().subscribe(
-                    this.processTokenResponse,
-                    error => console.error(error)
-                );
+                this.authenticationService.refresh$Response().subscribe({
+                    next: response => this.processTokenResponse(response),
+                    error: error => console.error(error)
+                });
             },
             Math.max(duration, 0)
         );
@@ -92,7 +92,7 @@ export class AuthService {
         optional.ifPresentOrElse(
             token => {
                 this.setTokenRefreshTimer(token.exp);
-                localStorage.setItem(LOCALSTORAGE_J2C_AUTHORIZATION, JSON.stringify(token.encoded));
+                localStorage.setItem(LOCALSTORAGE_J2C_AUTHORIZATION, token.encoded);
                 this.store.dispatch(new AuthActions.SetToken(token));
             },
             () => console.error('Server supplied unexpected token format')

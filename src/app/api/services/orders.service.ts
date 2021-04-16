@@ -871,6 +871,8 @@ export class OrdersService extends BaseService {
      * Sorting criteria in the format: property(,asc|desc). Default sort order is ascending. Multiple sort criteria are supported.
      */
     sort?: Array<string>;
+    email?: string;
+    status?: 'CREATED' | 'CONFIRMED' | 'PROCESSING' | 'PARTIALLY_FULFILLED' | 'FULFILLED' | 'CANCELLED';
   }): Observable<StrictHttpResponse<PageOrderDto>> {
 
     const rb = new RequestBuilder(this.rootUrl, OrdersService.GetAllPath, 'get');
@@ -878,6 +880,8 @@ export class OrdersService extends BaseService {
       rb.query('page', params.page, {});
       rb.query('size', params.size, {});
       rb.query('sort', params.sort, {});
+      rb.query('email', params.email, {});
+      rb.query('status', params.status, {});
     }
 
     return this.http.request(rb.build({
@@ -917,6 +921,8 @@ export class OrdersService extends BaseService {
      * Sorting criteria in the format: property(,asc|desc). Default sort order is ascending. Multiple sort criteria are supported.
      */
     sort?: Array<string>;
+    email?: string;
+    status?: 'CREATED' | 'CONFIRMED' | 'PROCESSING' | 'PARTIALLY_FULFILLED' | 'FULFILLED' | 'CANCELLED';
   }): Observable<PageOrderDto> {
 
     return this.getAll$Response(params).pipe(

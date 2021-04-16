@@ -1,0 +1,27 @@
+<div class="container-fluid">
+    <div class="row">
+        <h3 class="mr-auto">Fulfillment</h3>
+        <button type="button" class="btn btn-primary ml-auto" (click)="back()">Back</button>
+    </div>
+</div>
+<div>
+    <ngx-json-viewer [json]="fulfillment$ | async"></ngx-json-viewer>
+</div>
+<hr>
+<h3>Lines</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">Product</th>
+            <th scope="col">Quantity</th>
+            <th scope="col">Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let line of lines$ | async">
+            <td scope="row">{{ line.orderLine.productName + (!!line.orderLine.variantName ? ' , ' + line.orderLine.variantName : '') }}</td>
+            <td scope="row">{{ line.fulfillmentLine.quantity }}</td>
+            <td scope="row">{{ line.orderLine.quantity }}</td>
+        </tr>
+    </tbody>
+</table>

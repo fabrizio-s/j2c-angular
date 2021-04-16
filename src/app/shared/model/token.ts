@@ -29,6 +29,10 @@ export class Token {
         return !this.isAnonymous() && !this.isExpired();
     }
 
+    public hasAuthority(authority: string): boolean {
+        return this._authorities.includes(authority);
+    }
+
     public get sub(): number {
         return this._sub;
     }
@@ -62,9 +66,9 @@ export class Token {
 
         const decoded = optional.get();
 
-        const sub = getSub(decoded.sub);
-        const exp = getExp(decoded.exp);
-        const authorities = getAuthorities(decoded.authorities);
+        const sub = _sub(decoded.sub);
+        const exp = _exp(decoded.exp);
+        const authorities = _authorities(decoded.authorities);
 
         if (sub.isEmpty() || exp.isEmpty()) {
             console.error('Unexpected token format: ', decoded);
@@ -92,7 +96,7 @@ const decode = (str: string): Optional<any> => {
     return Optional.empty();
 }
 
-const getSub = (x: any): Optional<number> => {
+const _sub = (x: any): Optional<number> => {
     if (Number.isInteger(x)) {
         return Optional.ofNonNull(x);
     } else if (typeof x === 'string') {
@@ -105,14 +109,14 @@ const getSub = (x: any): Optional<number> => {
     return Optional.empty();
 }
 
-const getExp = (x: any): Optional<Date> => {
+const _exp = (x: any): Optional<Date> => {
     if (Number.isInteger(x)) {
         return Optional.ofNonNull(new Date(x*1000));
     }
     return Optional.empty();
 }
 
-const getAuthorities = (x: any): string[] => {
+const _authorities = (x: any): string[] => {
     if (Array.isArray(x)) {
         return (x as any[]).filter(authority => !!authority && typeof authority === 'string');
     }

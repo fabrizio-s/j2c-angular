@@ -8,7 +8,7 @@ import { HTTP_AUTHORIZATION } from '../shared/util/constants';
 @Injectable()
 export class AuthInterceptorService implements HttpInterceptor {
 
-    constructor(private store: Store) { }
+    constructor(private readonly store: Store) { }
 
     intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
         const token = this.store.selectSnapshot(AuthState.token);

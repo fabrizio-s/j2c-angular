@@ -1,0 +1,66 @@
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                ...
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+<h3>Order</h3>
+<div>
+    <ngx-json-viewer [json]="order$ | async"></ngx-json-viewer>
+</div>
+<hr>
+<h3>Lines</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">Product</th>
+            <th scope="col">Unit Price</th>
+            <th scope="col">Quantity</th>
+            <th scope="col">Reserved</th>
+            <th scope="col">Fulfilled</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let line of lines$ | async">
+            <td scope="row">{{ line.productName + (!!line.variantName ? ' , ' + line.variantName : '') }}</td>
+            <td scope="row">{{ line.unitPriceAmount | currencyFormatter: (order$ | async)!.currency }}</td>
+            <td scope="row">{{ line.quantity }}</td>
+            <td scope="row">{{ line.reservedQuantity }}</td>
+            <td scope="row">{{ line.fulfilledQuantity }}</td>
+        </tr>
+    </tbody>
+</table>
+<hr>
+<ng-container *ngIf="(fulfillments$ | async)!.length > 0">
+    <h3>Fulfillments</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Id</th>
+                <th scope="col">Completed</th>
+                <th scope="col"></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let fulfillment of fulfillments$ | async">
+                <td scope="row">{{ fulfillment.id }}</td>
+                <td scope="row">{{ !!fulfillment.completed ? 'Yes' : 'No' }}</td>
+                <td><button type="button" class="btn btn-primary"
+                        (click)="fulfillmentDetails(fulfillment.id)">Details</button></td>
+            </tr>
+        </tbody>
+    </table>
+</ng-container>

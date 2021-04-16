@@ -1,0 +1,52 @@
+<div class="container-fluid">
+    <div class="row">
+        <div class="btn-group dropleft ml-auto">
+            <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
+                aria-expanded="false">
+                {{ (status$ | async) || 'Status' }}
+            </button>
+            <div class="dropdown-menu">
+                <button class="dropdown-item" type="button" (click)="filterStatus(undefined)">Any</button>
+                <button class="dropdown-item" type="button" (click)="filterStatus('CREATED')">CREATED</button>
+                <button class="dropdown-item" type="button" (click)="filterStatus('CONFIRMED')">CONFIRMED</button>
+                <button class="dropdown-item" type="button" (click)="filterStatus('PROCESSING')">PROCESSING</button>
+                <button class="dropdown-item" type="button" (click)="filterStatus('PARTIALLY_FULFILLED')">PARTIALLY_FULFILLED</button>
+                <button class="dropdown-item" type="button" (click)="filterStatus('FULFILLED')">FULFILLED</button>
+                <button class="dropdown-item" type="button" (click)="filterStatus('CANCELLED')">CANCELLED</button>
+            </div>
+        </div>
+    </div>
+</div>
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">Id</th>
+            <th scope="col">Amount</th>
+            <th scope="col">Status</th>
+            <th scope="col">Created</th>
+            <th scope="col"></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let order of orders$ | async">
+            <td scope="row">{{ order.id }}</td>
+            <td>{{ order.capturedAmount | currencyFormatter: order.currency }}</td>
+            <td>{{ order.status }}</td>
+            <td>{{ order.createdAt | date: 'medium' }}</td>
+            <td><button type="button" class="btn btn-primary" (click)="details(order.id)">Details</button></td>
+        </tr>
+    </tbody>
+</table>
+<div class="container-fluid">
+    <div class="row">
+        <span class="ml-auto">(page {{ (page$ | async)! + 1 }} of {{ totalPages$ | async }})</span>
+        <nav>
+            <ul class="pagination">
+                <li class="page-item"><a class="page-link btn" [ngClass]="{'disabled': (page$ | async) == 0}"
+                        (click)="previousPage()">Previous</a></li>
+                <li class="page-item"><a class="page-link btn" [ngClass]="{'disabled': (page$ | async) == (totalPages$ | async)! - 1}"
+                        (click)="nextPage()">Next</a></li>
+            </ul>
+        </nav>
+    </div>
+</div>
