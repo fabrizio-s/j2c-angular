@@ -5,6 +5,7 @@ import { ConfigurationComponent } from './configuration/configuration.component'
 import { DashboardComponent } from './dashboard.component';
 import { DashboardGuard } from './dashboard.guard';
 import { HomeComponent } from './home/home.component';
+import { CreateFulfillmentComponent } from './orders/create-fulfillment/create-fulfillment.component';
 import { FulfillmentDetailsComponent } from './orders/fulfillment-details/fulfillment-details.component';
 import { OrderDetailsComponent } from './orders/order-details/order-details.component';
 import { OrdersComponent } from './orders/orders.component';
@@ -20,7 +21,8 @@ const routes: Routes = [
         path: 'orders',
         children: [
           { path: ':orderId', component: OrderDetailsComponent },
-          { path: ':orderId/fulfillments/:fulfillmentId', component: FulfillmentDetailsComponent },
+          { path: ':orderId/fulfillments/:fulfillmentId', pathMatch: 'full', component: FulfillmentDetailsComponent },
+          { path: ':orderId/create-fulfillment', pathMatch: 'full', component: CreateFulfillmentComponent },
           { path: '', component: OrdersComponent },
         ]
       },

@@ -1,66 +1,96 @@
-<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                ...
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary">Save changes</button>
-            </div>
+<div class="order-details-container">
+    <h2>Order Details</h2>
+    <div class="order-actions" fxLayout="row" fxLayoutAlign="space-between">
+        <button type="button" color="primary" mat-raised-button (click)="confirm()">Confirm</button>
+        <button type="button" color="primary" mat-raised-button (click)="createFulfillment()">Create Fulfillment</button>
+        <button type="button" color="primary" mat-raised-button (click)="fulfill()">Fulfill</button>
+        <button type="button" color="primary" mat-raised-button (click)="updateTrackingNumber()">Update Tracking Number</button>
+        <button type="button" color="primary" mat-raised-button (click)="cancel()">Cancel</button>
+        <button type="button" color="primary" mat-raised-button (click)="reinstate()">Reinstate</button>
+        <button type="button" color="primary" mat-raised-button (click)="undoFulfill()">Undo Fulfill</button>
+    </div>
+    <div>
+        <ngx-json-viewer [json]="order"></ngx-json-viewer>
+    </div>
+    <mat-divider></mat-divider>
+    <div class="order-lines-table-container mat-elevation-z8">
+        <div>
+            <h3 class="table-header">Lines</h3>
         </div>
+        <mat-table [dataSource]="lines">
+
+            <ng-container matColumnDef="productName">
+                <mat-header-cell *matHeaderCellDef>Product</mat-header-cell>
+                <mat-cell *matCellDef="let line">
+                    {{ line.productName + (!!line.variantName ? (' , ' + line.variantName) : '') }}
+                </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="unitPriceAmount">
+                <mat-header-cell *matHeaderCellDef>Unit Price</mat-header-cell>
+                <mat-cell *matCellDef="let line">
+                    {{ line.unitPriceAmount | currencyFormatter: order?.currency }}
+                </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="quantity">
+                <mat-header-cell *matHeaderCellDef>Quantity</mat-header-cell>
+                <mat-cell *matCellDef="let line">{{ line.quantity }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="reservedQuantity">
+                <mat-header-cell *matHeaderCellDef>Reserved</mat-header-cell>
+                <mat-cell *matCellDef="let line">
+                    {{ line.reservedQuantity }}
+                </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="fulfilledQuantity">
+                <mat-header-cell *matHeaderCellDef>Fulfilled</mat-header-cell>
+                <mat-cell *matCellDef="let line">
+                    {{ line.fulfilledQuantity }}
+                </mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="linesDisplayedColumns"></mat-header-row>
+
+            <mat-row *matRowDef="let row; columns: linesDisplayedColumns"></mat-row>
+
+        </mat-table>
+        <mat-paginator [length]="lines.length" [pageSize]="10" [pageSizeOptions]="[5, 10, 15, 20]" showFirstLastButtons>
+        </mat-paginator>
+    </div>
+    <div class="order-fulfillments-table-container mat-elevation-z8">
+        <h3 class="table-header">Fulfillments</h3>
+        <mat-table [dataSource]="fulfillments">
+
+            <ng-container matColumnDef="id">
+                <mat-header-cell *matHeaderCellDef>Id</mat-header-cell>
+                <mat-cell *matCellDef="let fulfillment">{{ fulfillment.id }}</mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="completed">
+                <mat-header-cell *matHeaderCellDef>Completed</mat-header-cell>
+                <mat-cell *matCellDef="let fulfillment">
+                    {{ !!fulfillment.completed ? 'Yes' : 'No' }}
+                </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="fulfillmentDetails">
+                <mat-header-cell *matHeaderCellDef></mat-header-cell>
+                <mat-cell *matCellDef="let fulfillment">
+                    <button type="button" mat-stroked-button
+                        (click)="fulfillmentDetails(fulfillment.id)">Details</button>
+                </mat-cell>
+            </ng-container>
+
+            <mat-header-row *matHeaderRowDef="fulfillmentsDisplayedColumns"></mat-header-row>
+
+            <mat-row *matRowDef="let row; columns: fulfillmentsDisplayedColumns"></mat-row>
+
+        </mat-table>
+        <mat-paginator [length]="fulfillments.length" [pageSize]="10" [pageSizeOptions]="[5, 10, 15, 20]"
+            showFirstLastButtons>
+        </mat-paginator>
     </div>
 </div>
-<h3>Order</h3>
-<div>
-    <ngx-json-viewer [json]="order$ | async"></ngx-json-viewer>
-</div>
-<hr>
-<h3>Lines</h3>
-<table class="table">
-    <thead>
-        <tr>
-            <th scope="col">Product</th>
-            <th scope="col">Unit Price</th>
-            <th scope="col">Quantity</th>
-            <th scope="col">Reserved</th>
-            <th scope="col">Fulfilled</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let line of lines$ | async">
-            <td scope="row">{{ line.productName + (!!line.variantName ? ' , ' + line.variantName : '') }}</td>
-            <td scope="row">{{ line.unitPriceAmount | currencyFormatter: (order$ | async)!.currency }}</td>
-            <td scope="row">{{ line.quantity }}</td>
-            <td scope="row">{{ line.reservedQuantity }}</td>
-            <td scope="row">{{ line.fulfilledQuantity }}</td>
-        </tr>
-    </tbody>
-</table>
-<hr>
-<ng-container *ngIf="(fulfillments$ | async)!.length > 0">
-    <h3>Fulfillments</h3>
-    <table class="table">
-        <thead>
-            <tr>
-                <th scope="col">Id</th>
-                <th scope="col">Completed</th>
-                <th scope="col"></th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr *ngFor="let fulfillment of fulfillments$ | async">
-                <td scope="row">{{ fulfillment.id }}</td>
-                <td scope="row">{{ !!fulfillment.completed ? 'Yes' : 'No' }}</td>
-                <td><button type="button" class="btn btn-primary"
-                        (click)="fulfillmentDetails(fulfillment.id)">Details</button></td>
-            </tr>
-        </tbody>
-    </table>
-</ng-container>

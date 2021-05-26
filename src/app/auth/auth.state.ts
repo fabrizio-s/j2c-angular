@@ -17,12 +17,12 @@ export interface AuthStateModel {
 export class AuthState {
 
   @Selector()
-  static token(state: AuthStateModel) {
+  static token(state: AuthStateModel): Token {
     return state.token;
   }
 
   @Action(SetToken)
-  setToken(ctx: StateContext<AuthStateModel>, action: SetToken) {
+  setToken(ctx: StateContext<AuthStateModel>, action: SetToken): void {
     ctx.patchState({
       token: action.payload
     });

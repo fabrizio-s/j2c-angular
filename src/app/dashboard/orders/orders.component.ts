@@ -1,55 +1,79 @@
-import { Component, OnInit } from '@angular/core';
-import { Select, Store } from '@ngxs/store';
-import { Observable } from 'rxjs';
-import { OrderDto, PageOrderDto } from 'src/app/api/models';
+import { AfterViewInit, Component, OnDestroy, ViewChild } from '@angular/core';
+import { combineLatest, Subscription } from 'rxjs';
+import { OrderDto } from 'src/app/api/models';
 import { OrdersService } from 'src/app/api/services';
-import { OrdersState } from './orders.state';
-import * as OrdersActions from './orders.actions';
 import { NgxSpinnerService } from 'ngx-spinner';
-import { finalize, tap } from 'rxjs/operators';
+import { finalize, startWith, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { OrderStatus } from 'src/app/shared/model/order-status';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatSort, Sort } from '@angular/material/sort';
+import { Optional } from 'typescript-optional';
+import { MatDialog } from '@angular/material/dialog';
+import { ErrorDialogComponent } from '../shared/error-dialog/error-dialog.component';
 
 @Component({
   selector: 'app-orders',
   templateUrl: './orders.component.html',
   styleUrls: ['./orders.component.scss']
 })
-export class OrdersComponent implements OnInit {
+export class OrdersComponent implements AfterViewInit, OnDestroy {
 
-  @Select(OrdersState.orders)
-  orders$!: Observable<OrderDto[]>;
+  @ViewChild(MatPaginator)
+  paginator!: MatPaginator;
 
-  @Select(OrdersState.page)
-  page$!: Observable<number>;
+  @ViewChild(MatSort)
+  matSort!: MatSort;
 
-  @Select(OrdersState.totalPages)
-  totalPages$!: Observable<number>;
-
-  @Select(OrdersState.status)
-  status$!: Observable<OrderStatus | undefined>;
+  orders: OrderDto[] = [];
+  totalOrders: number = 0;
+  status: OrderStatus | undefined;
+  sort: string | undefined;
+  initialTableSize = 10;
+  displayedColumns: string[] = ['id', 'amount', 'status', 'createdAt', 'details'];
+  private subscriptions: Subscription[] = [];
 
   constructor(
     private readonly ordersService: OrdersService,
-    private readonly store: Store,
     private readonly spinner: NgxSpinnerService,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly dialog: MatDialog
   ) { }
 
-  ngOnInit(): void {
-    if (!this.store.selectSnapshot(OrdersState.initialized)) {
-      this.spinner.show();
-      this.getOrders(0, undefined)
-      .subscribe({
-        next: response => this.store.dispatch(new OrdersActions.Initialize(response.content || []))
-      });
-    }
+  ngAfterViewInit(): void {
+    this.subscriptions.push(
+      this.matSort.sortChange.subscribe(() => this.paginator.pageIndex = 0),
+      combineLatest([
+        this.matSort.sortChange
+          .pipe(
+            startWith(undefined)
+          ),
+        this.paginator.page
+          .pipe(
+            startWith(undefined)
+          )
+      ])
+        .pipe(
+          tap(([sort]) => this.sort = toSortValue(sort).orUndefined())
+        )
+        .subscribe({
+          next: () => this.getOrders({
+            page: this.paginator.pageIndex,
+            size: this.paginator.pageSize
+          })
+        })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   filterStatus(status: OrderStatus | undefined): void {
-    this.getOrders(0, status)
-    .subscribe({
-      next: response => this.store.dispatch(new OrdersActions.SetOrders(response.content || []))
+    this.status = status;
+    this.getOrders({
+      page: this.paginator.pageIndex,
+      size: this.paginator.pageSize
     });
   }
 
@@ -60,41 +84,42 @@ export class OrdersComponent implements OnInit {
     this.router.navigate(['dashboard', 'orders', id]);
   }
 
-  nextPage(): void {
-    this.changePage(1);
-  }
-
-  previousPage(): void {
-    this.changePage(-1);
-  }
-
-  private changePage(increment: 1 | -1): void {
-    const newPage = (this.store.selectSnapshot(OrdersState.page) + increment) % this.store.selectSnapshot(OrdersState.totalPages);
-    this.getOrders(newPage, undefined)
-    .subscribe({
-      next: response => this.store.dispatch(new OrdersActions.SetOrders(response.content || []))
-    });
-  }
-
-  private getOrders(page: number, status: OrderStatus | undefined): Observable<PageOrderDto> {
+  private getOrders(
+    params: {
+      page: number,
+      size: number
+    }
+  ): void {
     this.spinner.show();
-    return this.ordersService.getAll({
-      page,
-      size: 10,
-      sort: ['createdAt,desc'],
-      status
+    this.ordersService.getAll({
+      page: params.page,
+      size: params.size,
+      sort: !!this.sort ? [this.sort] : [],
+      status: this.status
     })
-    .pipe(
-      finalize(() => this.spinner.hide()),
-      tap(
-        response => this.store.dispatch(
-          new OrdersActions.SetPagination({
-            page: response.number || 0,
-            totalPages: response.totalPages || -1
-          })
-        )
+      .pipe(
+        finalize(() => this.spinner.hide()),
       )
-    );
+      .subscribe({
+        next: response => {
+          this.orders = response.content || [];
+          this.totalOrders = response.totalElements || 0;
+        },
+        error: error => this.dialog.open(
+          ErrorDialogComponent,
+          {
+            width: '350px',
+            data: { error: error?.message }
+          }
+        )
+      });
   }
 
+}
+
+const toSortValue = (sort: Sort | undefined): Optional<string> => {
+  if (!sort?.direction) {
+    return Optional.empty();
+  }
+  return Optional.of(sort.active + ',' + sort.direction);
 }

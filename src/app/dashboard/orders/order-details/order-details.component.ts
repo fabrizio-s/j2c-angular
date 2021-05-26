@@ -1,13 +1,12 @@
 import { Component, OnInit } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Select, Store } from '@ngxs/store';
 import { NgxSpinnerService } from 'ngx-spinner';
-import { forkJoin, Observable } from 'rxjs';
+import { forkJoin } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { OrderDto, OrderFulfillmentDto, OrderLineDto } from 'src/app/api/models';
 import { OrdersService } from 'src/app/api/services';
-import * as OrderDetailsActions from './order-details.actions';
-import { OrderDetailsState } from './order-details.state';
+import { ErrorDialogComponent } from '../../shared/error-dialog/error-dialog.component';
 
 @Component({
   selector: 'app-order-details',
@@ -16,57 +15,100 @@ import { OrderDetailsState } from './order-details.state';
 })
 export class OrderDetailsComponent implements OnInit {
 
-  @Select(OrderDetailsState.order)
-  order$!: Observable<OrderDto>;
-
-  @Select(OrderDetailsState.lines)
-  lines$!: Observable<OrderLineDto[]>;
-
-  @Select(OrderDetailsState.fulfillments)
-  fulfillments$!: Observable<OrderFulfillmentDto[]>;
+  order: OrderDto | undefined;
+  lines: OrderLineDto[] = [];
+  fulfillments: OrderFulfillmentDto[] = [];
+  linesDisplayedColumns: string[] = ['productName', 'unitPriceAmount', 'quantity', 'reservedQuantity', 'fulfilledQuantity'];
+  fulfillmentsDisplayedColumns: string[] = ['id', 'completed', 'fulfillmentDetails'];
 
   constructor(
-    private readonly store: Store,
     private readonly route: ActivatedRoute,
     private readonly ordersService: OrdersService,
     private readonly spinner: NgxSpinnerService,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly dialog: MatDialog
   ) { }
 
   ngOnInit(): void {
-    this.route.paramMap.subscribe({
-      next: params => {
-        const id = this.parseId(params.get('orderId'));
-        this.spinner.show();
-        forkJoin({
-          order: this.ordersService.get({
-            orderId: id
-          }),
-          lines: this.ordersService.getLines({
-            orderId: id
-          }),
-          fulfillments: this.ordersService.getFulfillments({
-            orderId: id
-          })
-        })
-        .pipe(
-          finalize(() => this.spinner.hide())
-        )
-        .subscribe({
-          next: result => this.store.dispatch(
-            new OrderDetailsActions.SetDetails({
-              order: result.order,
-              lines: result.lines.content || [],
-              fulfillments: result.fulfillments.content || []
-            })
-          ),
-          error: error => {
-            console.error(error);
-            this.router.navigate(['dashboard', 'orders']);
-          }
-        });
-      }
-    });
+    this.getOrderDetails();
+  }
+
+  confirm(): void {
+    this.spinner.show();
+    this.ordersService.confirm({
+      orderId: this.getOrderId()
+    })
+      .pipe(
+        finalize(() => this.spinner.hide())
+      )
+      .subscribe({
+        next: () => this.getOrderDetails(),
+        error: error => this.showError(error?.error?.message)
+      });
+  }
+
+  createFulfillment(): void {
+    const orderId = this.route.snapshot.paramMap.get('orderId');
+    this.router.navigate(['dashboard', 'orders', orderId, 'create-fulfillment']);
+  }
+
+  fulfill(): void {
+    this.spinner.show();
+    this.ordersService.fulfill({
+      orderId: this.getOrderId()
+    })
+      .pipe(
+        finalize(() => this.spinner.hide())
+      )
+      .subscribe({
+        next: () => this.getOrderDetails(),
+        error: error => this.showError(error?.error?.message)
+      });
+  }
+
+  updateTrackingNumber(): void {
+  }
+
+  cancel(): void {
+    this.spinner.show();
+    this.ordersService.cancel({
+      orderId: this.getOrderId()
+    })
+      .pipe(
+        finalize(() => this.spinner.hide())
+      )
+      .subscribe({
+        next: () => this.getOrderDetails(),
+        error: error => this.showError(error?.error?.message)
+      });
+  }
+
+  reinstate(): void {
+    this.spinner.show();
+    this.ordersService.reinstate({
+      orderId: this.getOrderId()
+    })
+      .pipe(
+        finalize(() => this.spinner.hide())
+      )
+      .subscribe({
+        next: () => this.getOrderDetails(),
+        error: error => this.showError(error?.error?.message)
+      });
+  }
+
+  undoFulfill(): void {
+    this.spinner.show();
+    this.ordersService.undoFulfill({
+      orderId: this.getOrderId()
+    })
+      .pipe(
+        finalize(() => this.spinner.hide())
+      )
+      .subscribe({
+        next: () => this.getOrderDetails(),
+        error: error => this.showError(error?.error?.message)
+      });
   }
 
   fulfillmentDetails(id: number | undefined): void {
@@ -77,13 +119,8 @@ export class OrderDetailsComponent implements OnInit {
     this.router.navigate(['dashboard', 'orders', orderId, 'fulfillments', id]);
   }
 
-  showModal(): void {
-    // $('#myModal').on('shown.bs.modal', function () {
-    //   $('#myInput').trigger('focus')
-    // })
-  }
-
-  private parseId(id: any): number {
+  private getOrderId(): number {
+    const id = this.route.snapshot.paramMap.get('orderId') || 'NONE';
     try {
       return parseInt(id);
     } catch (error) {
@@ -91,6 +128,48 @@ export class OrderDetailsComponent implements OnInit {
       this.router.navigate(['dashboard', 'orders']);
       throw error;
     }
+  }
+
+  private getOrderDetails(): void {
+    const id = this.getOrderId();
+    this.spinner.show();
+    forkJoin({
+      order: this.ordersService.get({
+        orderId: id
+      }),
+      lines: this.ordersService.getLines({
+        orderId: id,
+        size: 1000
+      }),
+      fulfillments: this.ordersService.getFulfillments({
+        orderId: id,
+        size: 1000
+      })
+    })
+      .pipe(
+        finalize(() => this.spinner.hide())
+      )
+      .subscribe({
+        next: result => {
+          this.order = result.order;
+          this.lines = result.lines.content || [];
+          this.fulfillments = result.fulfillments.content || [];
+        },
+        error: error => {
+          this.showError(error?.error?.message);
+          this.router.navigate(['dashboard', 'orders']);
+        }
+      });
+  }
+
+  private showError(message: string): void {
+    this.dialog.open(
+      ErrorDialogComponent,
+      {
+        width: '350px',
+        data: { error: message }
+      }
+    );
   }
 
 }

@@ -33,11 +33,8 @@ $j2c-angular-theme: mat-light-theme((
 @include angular-material-theme($j2c-angular-theme);
 
 :root {
-    --primary-1: #132d33;
-    --primary-2: #449eb3;
-    --primary-3: #61e2ff;
-    --primary-4: #a0eeff;
-    --primary-5: #dff9ff;
+    --primary: #3f51b5;
+    --primary-shade-1: #324191;
 }
 
 html {

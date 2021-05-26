@@ -1,61 +1,51 @@
-.sidenav {
-    height: 100%;
-    background-color: var(--primary-2);
-    overflow-x: hidden;
-    padding-top: 20px;
+.login-side {
+    background-color: var(--primary);
 }
 
-.main {
-    padding: 10px;
-}
-
-@media screen and (max-height: 450px) {
-
-    .sidenav {
-        padding-top: 15px;
-    }
-
-}
-
-@media screen and (max-width: 450px) {
-
-    .login-form {
-        margin-top: 10%;
-    }
-
-}
-
-@media screen and (min-width: 768px) {
-
-    .main {
-        padding-left: 40%;
-    }
-
-    .sidenav {
-        width: 40%;
-        position: fixed;
-        z-index: 1;
-        top: 0;
-        left: 0;
-    }
-
-    .login-form {
-        padding-top: 80%;
-    }
-
-}
-
-.login-main-text {
-    margin-top: 20%;
-    padding: 60px;
+.login-title {
     color: white;
 }
 
-.login-main-text h2 {
-    font-weight: 300;
+.login-form-field, .login-submit {
+    margin-bottom: 8px;
 }
 
-.btn-black {
-    background-color: var(--primary-2) !important;
-    color: white;
+.login-submit {
+    margin-top: 20px;
+}
+
+@media screen and (max-width: 599px) {
+
+    .login-title {
+        padding-top: 16px;
+        padding-bottom: 16px;
+        text-align: center;
+    }
+
+    .login-form-field, .login-submit {
+        text-align: center;
+    }
+
+    .login-form {
+        padding-top: 10%;
+    }
+
+}
+
+@media screen and (min-width: 600px) {
+
+    .login-container {
+        min-height: 100%;
+    }
+
+    .login-title {
+        margin-left: 10%;
+        margin-top: 40%;
+    }
+
+    .login-form {
+        padding-left: 15%;
+        margin-top: 35%;
+    }
+
 }

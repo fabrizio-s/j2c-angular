@@ -1,0 +1,21 @@
+.order-details-container {
+    width: 95%;
+    margin: auto;
+    padding-top: 12px;
+    margin-bottom: 20px;
+}
+
+.order-lines-table-container,
+.order-fulfillments-table-container {
+    overflow-x: auto;
+    min-width: 900px;
+    margin-top: 15px;
+}
+
+.table-header {
+    margin: 16px;
+}
+
+.order-actions {
+    margin-bottom: 10px;
+}
